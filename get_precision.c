@@ -1,41 +1,84 @@
 #include "main.h"
-
+#include <stdlib.h>
+char *do_digit_precision(char *str, int prec, int len);
 /**
- * get_precision - Calculates the precision for printing
- * @format: Formatted string in which to print the arguments
- * @i: List of arguments to be printed.
- * @list: list of arguments.
+ * do_precision - Perform precision on integer and strings. For integers,
+ * controls minimum number of digits to print, pad with 0s if needed. For
+ * strings, controls maximum number of characters to print.
+ * @str: Pointer to string.
+ * @prec: Precision value.
+ * @spec: Charater specifier. eg. s for strings, d for integers.
  *
- * Return: Precision.
+ * Return: Pointer to the new string.
  */
-int get_precision(const char *format, int *i, va_list list)
+
+char *do_precision(char *str, int prec, char spec)
 {
-	int curr_i = *i + 1;
-	int precision = -1;
+	char *ret;
+	int len, i;
+	char int_array[] = {'i', 'd', 'o', 'u', 'x', 'X', 'p', 0};
 
-	if (format[curr_i] != '.')
-		return (precision);
-
-	precision = 0;
-
-	for (curr_i += 1; format[curr_i] != '\0'; curr_i++)
+	ret = str;
+	len = _strlen(str);
+	if (ch_in_array(spec, int_array))
 	{
-		if (is_digit(format[curr_i]))
+		return (do_digit_precision(str, prec, len));
+	}
+	else if (spec == 's')
+	{
+		if (len > prec)
 		{
-			precision *= 10;
-			precision += format[curr_i] - '0';
-		}
-		else if (format[curr_i] == '*')
-		{
-			curr_i++;
-			precision = va_arg(list, int);
-			break;
+			ret = malloc(prec + 1);
+			for (i = 0; i < prec; i++)
+				ret[i] = str[i];
+			ret[i] = '\0';
+			free(str);
 		}
 		else
-			break;
+			return (str);
 	}
+	return (ret);
+}
+/**
+ * do_digit_precision - helper function for do_precision, performed on digits
+ * @str: pointer to string in memory that we need to do precision on
+ * @prec: integer representing precision needed/specified
+ * @len: length of string, passed from do_precision
+ *
+ * Return: pointer to new string in memory containing old string, effected
+ * by precision accordingly.
+ */
+char *do_digit_precision(char *str, int prec, int len)
+{
+	char *ret;
+	int i, j;
 
-	*i = curr_i - 1;
-
-	return (precision);
+	if (str[0] == '-')
+	{
+		if (len > prec)
+			return (str);
+		ret = malloc(prec + 2);
+		if (!ret)
+			return (NULL);
+		i = prec + 1;
+		j = len;
+		while (j >= 1)
+			ret[i--] = str[j--];
+		while (i >= 1)
+			ret[i--] = '0';
+		ret[0] = '-';
+		free(str);
+	}
+	else if (str[0] == '0' && len == 1)
+	{
+		if (prec == 0)
+		{
+			str[0] = '\0';
+			return (str);
+		}
+		ret = do_width(str, prec, 1);
+	}
+	else
+		ret = do_width(str, prec, 1);
+	return (ret);
 }
